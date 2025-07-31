@@ -3,7 +3,29 @@ import { useEffect, useState } from 'react'
 
 const STORAGE_KEY = 'budgetState-v1'
 
-const getInitialData = () => {
+type CostMap = {
+  [key: string]: number
+}
+
+interface BudgetState {
+  income: number
+  checkingBalance: number
+  recurring: CostMap
+  pending: CostMap
+  creditCards: {
+    [name: string]: {
+      balance: number
+      due: string
+    }
+  }
+  extras: {
+    date: string
+    description: string
+    amount: number
+  }[]
+}
+
+const getInitialData = (): BudgetState | null => {
   if (typeof window === 'undefined') return null
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return null
@@ -14,7 +36,7 @@ const getInitialData = () => {
   }
 }
 
-const defaultState = {
+const defaultState: BudgetState = {
   income: 2200,
   checkingBalance: 0,
   recurring: {
@@ -41,6 +63,7 @@ const defaultState = {
   },
   extras: []
 }
+
 
 export default function Home() {
   const [data, setData] = useState(defaultState)
@@ -85,8 +108,9 @@ export default function Home() {
   }
 
   const handleRemoveRecurring = (name: string) => {
-    const { [name]: _, ...rest } = data.recurring
-    setData(prev => ({ ...prev, recurring: rest }))
+    const updated = { ...data.recurring }
+    delete updated[name]
+    setData(prev => ({ ...prev, recurring: updated }))
   }
 
   const handleAddPending = () => {
@@ -98,8 +122,9 @@ export default function Home() {
   }
 
   const handleRemovePending = (name: string) => {
-    const { [name]: _, ...rest } = data.pending
-    setData(prev => ({ ...prev, pending: rest }))
+    const updated = { ...data.pending }
+    delete updated[name]
+    setData(prev => ({ ...prev, pending: updated }))
   }
 
   const handleAddExtra = () => {
